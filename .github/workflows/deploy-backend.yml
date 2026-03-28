@@ -1,0 +1,29 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [backend]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BACKEND_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/backend
+            git pull origin backend
+            docker build -t averitas-backend:latest .
+            docker save averitas-backend:latest -o /tmp/averitas-backend-latest.tar
+            sudo k3s ctr images import /tmp/averitas-backend-latest.tar
+            kubectl set image deployment/averitas-backend \
+              backend=docker.io/library/averitas-backend:latest -n averitas
+            kubectl rollout status deployment/averitas-backend -n averitas
+            echo "Backend deployed successfully!"
