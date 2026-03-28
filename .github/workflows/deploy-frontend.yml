@@ -1,0 +1,31 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [frontend]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/frontend
+            git pull origin frontend
+            docker stop averitas-frontend || true
+            docker rm averitas-frontend || true
+            docker build -t averitas-frontend:latest .
+            docker run -d \
+              --name averitas-frontend \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              averitas-frontend:latest
+            echo "Frontend deployed successfully!"
