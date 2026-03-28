@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: averitas-backend
+  namespace: averitas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: averitas-backend
+  template:
+    metadata:
+      labels:
+        app: averitas-backend
+    spec:
+      containers:
+        - name: backend
+          image: docker.io/library/averitas-backend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+psycopg2://averitas:averitaspass@averitas-postgres-postgresql.averitas.svc.cluster.local:5432/averitas_outreach"
+            - name: REDIS_URL
+              value: "redis://averitas-redis-master.averitas.svc.cluster.local:6379/0"
+            - name: SMTP_HOST
+              value: "mailhog"
+            - name: SMTP_USERNAME
+              value: ""
+            - name: SMTP_PASSWORD
+              value: ""
+            - name: MAIL_FROM
+              value: "study@local.test"
+            - name: BASE_URL
+              value: "http://54.90.187.51:8000"
+            - name: SECRET_KEY
+              value: "IrotCJG8Cm5fWKuPyHsHfEHq754f-xtii8jZs7MqZFY"
